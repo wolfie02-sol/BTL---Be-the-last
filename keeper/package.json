@@ -8,6 +8,7 @@
     "fetch-idls": "node scripts/fetch-idls.mjs",
     "init-game": "tsx src/init.ts",
     "lock-config": "tsx src/lock.ts",
+    "admin": "tsx src/admin.ts",
     "start": "tsx src/index.ts",
     "status": "tsx src/status.ts",
     "test": "tsx --test src/order.test.ts",

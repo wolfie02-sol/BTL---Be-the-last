@@ -12,17 +12,38 @@ export type GameState = {
   minBuyLamports: bigint;
   keeperGraceS: number;
   publicFallbackS: number;
+  autoVoidS: number;
   round: number;
   hasBuyer: boolean;
   lastBuyer: PublicKey;
   lastBuyTs: number;
   lastSlot: number;
   lastIndex: number;
+  lastBuySig: string;
+  started: boolean;
   deadline: number;
   emaGapMs: number;
   tier: number;
   durationsS: number[];
+  paused: boolean;
+  pausedAt: number;
+  pauseReason: number;
+  ignoreBefore: number;
   totalPaidLamports: bigint;
+};
+
+/** Matches `pause_reason` in the program. */
+export const PauseReason = {
+  MANUAL: 0,
+  WINNER_UNVERIFIED: 1,
+  MISSED_BUY: 2,
+  KEEPER_FAULT: 3,
+} as const;
+export const PAUSE_REASON_TEXT: Record<number, string> = {
+  0: "paused manually",
+  1: "winning buy could not be verified",
+  2: "a qualifying buy after the recorded winner was found",
+  3: "keeper hit an error it could not safely recover from",
 };
 
 const n = (v: { toString(): string }) => Number(v.toString());
@@ -54,11 +75,15 @@ export class BtlClient {
     return {
       admin: g.admin, keeper: g.keeper, mint: g.mint,
       minBuyLamports: b(g.minBuyLamports),
-      keeperGraceS: n(g.keeperGraceS), publicFallbackS: n(g.publicFallbackS),
+      keeperGraceS: n(g.keeperGraceS), publicFallbackS: n(g.publicFallbackS), autoVoidS: n(g.autoVoidS),
       round: n(g.round), hasBuyer: g.hasBuyer, lastBuyer: g.lastBuyer,
       lastBuyTs: n(g.lastBuyTs), lastSlot: n(g.lastSlot), lastIndex: Number(g.lastIndex),
+      lastBuySig: bs58.encode(Uint8Array.from(g.lastBuySig as number[])),
+      started: g.started,
       deadline: n(g.deadline), emaGapMs: n(g.emaGapMs), tier: Number(g.tier),
       durationsS: (g.durationsS as BN[]).map(n),
+      paused: g.paused, pausedAt: n(g.pausedAt), pauseReason: Number(g.pauseReason),
+      ignoreBefore: n(g.ignoreBefore),
       totalPaidLamports: b(g.totalPaidLamports),
     };
   }
@@ -86,7 +111,7 @@ export class BtlClient {
         p.index,
         Array.from(bs58.decode(p.signature)),
       )
-      .accountsPartial({ keeper: this.signer.publicKey, game: this.game })
+      .accountsPartial({ game: this.game, keeper: this.signer.publicKey })
       .preInstructions(this.priority())
       .rpc();
   }
@@ -94,9 +119,27 @@ export class BtlClient {
   async settle(winner: PublicKey): Promise<string> {
     return this.program.methods
       .settle()
-      .accountsPartial({ caller: this.signer.publicKey, game: this.game, vault: this.vault, winner })
+      .accountsPartial({ game: this.game, caller: this.signer.publicKey, vault: this.vault, winner })
       .preInstructions(this.priority())
       .rpc();
+  }
+
+  async pause(reason: number): Promise<string> {
+    return this.program.methods
+      .pause(reason)
+      .accountsPartial({ game: this.game, signer: this.signer.publicKey })
+      .preInstructions(this.priority())
+      .rpc();
+  }
+
+  async resume(): Promise<string> {
+    return this.program.methods.resume()
+      .accountsPartial({ game: this.game, admin: this.signer.publicKey }).rpc();
+  }
+
+  async voidRound(): Promise<string> {
+    return this.program.methods.voidRound()
+      .accountsPartial({ game: this.game, caller: this.signer.publicKey }).rpc();
   }
 }
 

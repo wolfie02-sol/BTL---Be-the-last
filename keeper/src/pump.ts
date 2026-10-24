@@ -53,7 +53,8 @@ export class PumpBuyReader {
   constructor(
     private conn: Connection,
     private mint: PublicKey,
-    private minBuyLamports: bigint,
+    /** Kept in sync with the on-chain minimum by the caller. */
+    public minBuyLamports: bigint,
   ) {}
 
   /** Every qualifying buy in one transaction, in execution order. */
@@ -156,8 +157,11 @@ export class PumpBuyReader {
     const cached = this.pools.get(k);
     if (cached !== undefined) return cached;
     const info = await this.conn.getAccountInfo(pool, "confirmed");
+    // A pool that just traded must exist. If the RPC can't return it, fail
+    // the poll and retry rather than caching "not ours" and skipping buys.
+    if (!info) throw new Error(`pool ${k} not readable yet`);
     let ok = false;
-    if (info && info.owner.equals(PUMP_AMM_PROGRAM_ID)) {
+    if (info.owner.equals(PUMP_AMM_PROGRAM_ID)) {
       const p = this.ammAccounts.decode("Pool", info.data) as Record<string, unknown>;
       ok =
         key(field(p, "base_mint")) === this.mint.toBase58() &&
