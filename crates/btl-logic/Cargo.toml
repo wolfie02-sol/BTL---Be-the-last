@@ -1,0 +1,7 @@
+[package]
+name = "btl-logic"
+version = "0.1.0"
+edition = "2021"
+description = "Dependency-free timer and round rules for Be The Last. Shared by the on-chain program and unit tests."
+
+[dependencies]

@@ -1,0 +1,27 @@
+{
+  "name": "btl-keeper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Watches pump.fun for qualifying buys, reports them to the BTL program, settles rounds and cranks creator fees into the pot.",
+  "scripts": {
+    "fetch-idls": "node scripts/fetch-idls.mjs",
+    "init-game": "tsx src/init.ts",
+    "lock-config": "tsx src/lock.ts",
+    "start": "tsx src/index.ts",
+    "status": "tsx src/status.ts",
+    "test": "tsx --test src/order.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
+    "@solana/web3.js": "^1.98.4",
+    "bs58": "^6.0.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

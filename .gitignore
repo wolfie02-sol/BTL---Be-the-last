@@ -1,0 +1,7 @@
+target/
+node_modules/
+keeper/.env
+keeper/*.json.bak
+keeper/keeper.json
+keeper/keeper-state.json
+keeper/idl/

@@ -1,0 +1,21 @@
+[package]
+name = "btl"
+version = "0.1.0"
+description = "Be The Last: last-buyer-wins pot for a pump.fun coin"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "btl"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.31.1"
+btl-logic = { path = "../../crates/btl-logic" }
